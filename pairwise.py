@@ -3,7 +3,6 @@ from __future__ import annotations
 from itertools import combinations
 from typing import Dict, Iterable, List, Tuple, FrozenSet
 
-import argparse
 import json
 import sys
 
@@ -87,45 +86,28 @@ def generate_pairwise_tests(parameters: Dict[str, Iterable[object]]) -> List[Dic
     return tests
 
 
-def _parse_cli_args(args: Iterable[str]) -> Dict[str, List[str]]:
-    """Parse command line parameter specifications.
+def _prompt(message: str) -> str:
+    """Display ``message`` and return the user's response."""
+    print(message, end="", file=sys.stderr)
+    return input()
 
-    Parameters are given as ``name=v1,v2`` strings. For example::
 
-        python pairwise.py size=small,large color=red,blue
-
-    Parameters
-    ----------
-    args:
-        Iterable of argument strings.
-
-    Returns
-    -------
-    Dict[str, List[str]]
-        Mapping of parameter names to lists of values.
-    """
+def main() -> int:
+    """Entry point for interactive pairwise test generation."""
+    print(
+        "Enter parameters to generate pairwise combinations.",
+        file=sys.stderr,
+    )
+    print("Leave the parameter name blank to finish.\n", file=sys.stderr)
 
     parameters: Dict[str, List[str]] = {}
-    for arg in args:
-        if "=" not in arg:
-            raise ValueError(f"Invalid parameter specification: {arg!r}")
-        name, values = arg.split("=", 1)
-        parameters[name] = values.split(",") if values else []
-    return parameters
+    while True:
+        name = _prompt("Parameter name: ").strip()
+        if not name:
+            break
+        values = _prompt(f"Values for {name} (comma-separated): ").strip()
+        parameters[name] = [v.strip() for v in values.split(",")] if values else []
 
-
-def main(argv: List[str] | None = None) -> int:
-    """Entry point for command line execution."""
-
-    parser = argparse.ArgumentParser(description="Generate pairwise test cases")
-    parser.add_argument(
-        "params",
-        nargs="+",
-        help="Parameters in the form name=v1,v2,...",
-    )
-    ns = parser.parse_args(argv)
-
-    parameters = _parse_cli_args(ns.params)
     cases = generate_pairwise_tests(parameters)
     for case in cases:
         print(json.dumps(case))
