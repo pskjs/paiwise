@@ -3,6 +3,8 @@ import json
 import subprocess
 import sys
 
+# Ensure the project root is on the import path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from pairwise import generate_pairwise_tests
 
 
@@ -33,10 +35,13 @@ def test_generate_pairwise_binary_parameters():
     assert seen_pairs == expected_pairs
 
 
-def test_cli_invocation_generates_cases(tmp_path):
+def test_cli_invocation_generates_cases():
     script = Path(__file__).resolve().parent.parent / "pairwise.py"
-    cmd = [sys.executable, str(script), "a=0,1", "b=0,1"]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    cmd = [sys.executable, str(script)]
+    user_input = "a\n0,1\nb\n0,1\n\n"
+    result = subprocess.run(
+        cmd, input=user_input, capture_output=True, text=True, check=True
+    )
 
     cases = [json.loads(line) for line in result.stdout.strip().splitlines()]
     seen_pairs = set()
